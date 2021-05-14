@@ -1,0 +1,194 @@
+---
+title: "Cleaning and Arranging the Helix MTdB"
+author: "Lee Kapp"
+date: "3/9/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = FALSE, fig.width = 6, fig.height = 4)
+library(tidyverse)
+library(readxl)
+theme_set(theme_light(base_size = 12))
+
+
+```
+
+###  Features to consider
+There are several potential inputs into any algorithm designed to predict the pathogenicity of mutations.  If I were confronted with an alignment of mtDNA sequences and had to decide whether a particular mutation was potentially harmful I’d consider:
+
+-What is the nature of the mutation? point mutation? insertion? deletion? (for latter two, involving how many bases; frameshift?)
+-Is the base conserved?  If so, how widely (in which species?)
+-Is the base in coding or in non-coding sequence? This consideration might be associated with the previous one - better to think about conservation first because non-coding elements can be conserved
+-If coding, which position in the codon is affected?
+-Is a start or stop codon eliminated? or created?
+-Is a simple sequence repeat or slippery sequence introduced by the mutation? 
+-Which protein is affected? (Is it only provided by mtDNA or is there a nuclear encoded version?)
+-Where in the protein is the affected amino acid? Is an internal or surface residue affected?  Is an enzyme’s active site affected? Is a protein-protein interaction domain affected?
+
+### Importing the helix mtDB
+```{r import}
+#The Cambridge reference human mtDNA sequence is GenBank: J01415.2
+#Also see https://www.mitomap.org/foswiki/bin/view/MITOMAP/GenomeLoci for annotation of mt genes and locations
+# mt genome = 13 protein coding genes, 22 tRNAs, 2 rRNAs, D-Loop, no introns
+# Alleles data are lists with the WT base listed first followed by the variants detected at that base
+helixMT<-read_tsv("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/helixDB.txt")
+```
+
+### Data cleaning
+```{r cleaning}
+## dropping haplotypes
+helixMT <- helixMT[-c(9:12)]
+
+## fixing NaNs
+##helixMT$mean_ARF <- ifelse(helixMT$mean_ARF == "NaN", NA, helixMT$mean_ARF)
+
+## annotating allele type
+helixMT$mutation<-c(rep("unknown", length(helixMT$alleles)))
+helixMT$mutation<-ifelse(helixMT$alleles %in% c("[\"C\",\"T\"]","[\"T\",\"C\"]","[\"A\",\"G\"]","[\"G\",\"A\"]"), "transition", helixMT$mutation)
+helixMT$mutation<-ifelse(helixMT$alleles %in% c("[\"C\",\"A\"]","[\"A\",\"C\"]","[\"C\",\"G\"]","[\"G\",\"C\"]","[\"A\",\"T\"]","[\"T\",\"A\"]", "[\"G\",\"T\"]","[\"T\",\"G\"]"), "transversion", helixMT$mutation)
+helixMT$mutation<-ifelse(helixMT$mutation =="unknown", "in-del", helixMT$mutation)
+```
+
+### Aggregation per gene - still need to normalize counts per gene to gene length
+```{r aggregation}
+allelesPerGene <- as.data.frame(table(helixMT$gene, helixMT$mutation))
+colnames(allelesPerGene) <- c('gene', 'allele', 'count')
+
+## making a table in wide format by splitting long format by allele type
+indels <- allelesPerGene %>% filter(allele == "in-del")
+indels <- indels[-c(2)]
+colnames(indels) <- c('gene', 'indels')
+transitions <- allelesPerGene %>% filter(allele == "transition")
+transitions <- transitions[-c(2)]
+colnames(transitions) <- c('gene', 'transitions')
+transversions <- allelesPerGene %>% filter(allele == "transversion")
+transversions <- transversions[-c(2)]
+colnames(transversions) <- c('gene', 'transversions')
+
+## Putting the columns together for wide table
+alleleCounts <- inner_join(indels, transitions)
+alleleCounts <- inner_join(alleleCounts, transversions)
+
+## Aggregating by plasmicity
+hom_rows <- rowsum(helixMT[5], helixMT$gene)
+het_rows <- rowsum(helixMT[7], helixMT$gene)
+plasmicity <- cbind(hom_rows, het_rows)
+colnames(plasmicity) <- c('hom_counts', 'het_counts')
+mtDNA_table <- cbind(alleleCounts, plasmicity)
+
+## adding to the wide table
+mtDNA_table <- cbind(alleleCounts, plasmicity)
+
+```
+
+### Gene annotation by feature
+```{r}
+featuresPerGene <- as.data.frame(table(helixMT$gene, helixMT$feature))
+featuresPerGene <- featuresPerGene %>% filter(Freq != 0)
+colnames(featuresPerGene) <- c("gene", "seq_type", "freq")
+```
+
+
+### Writing csv files
+```{r write data}
+write.csv(helixMT, "/Users/leekapp/Desktop/CS254/Assignments/FinalProject/helixMT.csv")
+#NOTE: after this file is created go into Excel and delete the index of gene names (not the column labeled gene)
+write.csv(mtDNA_table, "/Users/leekapp/Desktop/CS254/Assignments/FinalProject/mtDNA_table.csv") 
+```
+
+
+### Importing mtDNA table of variants detected per gene
+```{r table import}
+mtDNA_table <- read_csv("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/mtDNA_table.csv")
+```
+
+### Need to determine number of base pairs of each sequence feature and normalize by that in a df that has total num of mutations per gene
+```{r mitoMap import, echo=FALSE, message=FALSE, warning=FALSE}
+#importing mitomap data
+geneDB<-read_xlsx("/Users/leekapp/Desktop/STAT 235/STAT235Project/mitoMap.xlsx")
+geneDB$`Shorthand `<-NULL
+geneDB<- geneDB %>% mutate(length = `Ending ` - `Starting `) #determining gene length
+geneDB<- subset(geneDB, select = -c(`Starting `,`Ending `))
+colnames(geneDB)<-c("gene", "description", "length")
+geneDB <- geneDB %>% arrange(gene)
+```
+
+### Joining gene lengths to mtDNA table and then sequence type - the output does not include CRb
+```{r join lengths}
+mtTable <- inner_join(mtDNA_table, geneDB, by = "gene")
+norm_mtTable <- mtTable
+norm_mtTable <- inner_join(norm_mtTable, featuresPerGene, by = "gene")
+norm_mtTable <- norm_mtTable[-10] #drops freq column
+norm_mtTable <- norm_mtTable[, c(1:6, 9, 7, 8)] #reorders columns
+```
+
+### Normalizing counts per gene length - this is not the same thing as per bp mutation rate
+```{r normalizing}
+for (col in 2:6) {
+  norm_mtTable[,col] <- round(mtTable[,col]/mtTable$length, 4)
+}
+
+### Setting min gene length to 1
+norm_mtTable$length <- ifelse(norm_mtTable$length == 0, 1, norm_mtTable$length)
+### getting rid of NC regions with length == 0
+norm_mtTable <- norm_mtTable %>% filter(length != 0)
+```
+
+### Write normalized data to CSV
+```{r write norm}
+write.csv(norm_mtTable, "/Users/leekapp/Desktop/CS254/Assignments/FinalProject/norm_mtDNA_table.csv")
+```
+
+### Power law distribution shows most variants are in non-coding sequence
+```{r powerlawDist, echo=FALSE, message = FALSE}
+# loci<- as.data.frame(helixMT %>% group_by(locus, feature) %>%  summarize(n()))
+# loci<-loci[order(-loci$`n()`),] #sorting the loci df in descending order
+# loci$Rank<-1:length(loci$`n()`) #making the column "rank"
+# colnames(loci)<- c("locus", "sequence_type", "count", "rank")
+# 
+# ggplot(data = loci, mapping = aes(y = log10(count), x = log10(rank), color = sequence_type)) +
+#   labs(title = "Inverse power law distribution for mutations in human mtDNA",
+#        subtitle = "Highest count/rank for non coding sequences") +
+#   geom_point(size = 3) +
+#   theme_light() +
+#   theme(legend.text = element_text(size = 12)) +
+#   theme(axis.title = element_text(size = 10)) +
+#   theme(axis.text.x = element_text(size = 10)) +
+#   scale_color_manual(values = topo.colors(4))
+```
+
+### Import of wildtype sequence
+We need to know the role of each bp per codon to identify missense, nonsense, and silent mutations. Could analyze in-dels for whether they're a multiple of three (for protein coding genes)
+Need to annotate each base as start or end of gene, coding vs. noncoding, and if coding, which codon position it is
+```{r WT}
+wildtype <- read_xlsx("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/ref_annotation.xlsx")
+str(wildtype)
+```
+### Import of base index
+```{r base index}
+baseIndex <- read_csv("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/baseIndex.csv")
+```
+
+### Joining base index to wildtype
+```{r}
+indexedWT <- inner_join(baseIndex, wildtype, by = "base")
+```
+
+###  Binding helixMT to indexedWT
+```{r left join}
+helixMTdb <- cbind(helixMT, indexedWT)
+helixMTdb <- helixMTdb[-c(10)]
+```
+
+### Tables of Codon Annotations
+```{r annotation table}
+table(helixMTdb$annotation, helixMTdb$gene)
+table(helixMTdb$annotation)
+```
+
+### Writing Annotated Data
+```{r write final data}
+write.csv(helixMTdb, "/Users/leekapp/Desktop/CS254/Assignments/FinalProject/helixData.csv")
+```
+

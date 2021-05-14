@@ -1,0 +1,223 @@
+---
+title: "Complete Labeling of the Helix mtDB"
+author: "Lee Kapp"
+date: "4/25/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse); library(readxl); library(randomcoloR); library(gridExtra)
+```
+
+### Data import
+```{r import}
+data <- read_csv("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/treeDF.csv")
+```
+### Picking random colors
+```{r colors}
+annColors <- distinctColorPalette(8)
+```
+
+### Log transform
+```{r log}
+data$counts_het <- ifelse(data$counts_het == 0, 0.001, data$counts_het)
+data$counts_hom <- ifelse(data$counts_hom == -0, 0.001, data$counts_hom)
+
+data$log_hom <- log(data$counts_hom)
+data$log_het <- log(data$counts_het)
+```
+
+### Categorizing homoplasmic variants more numerous that known pathogenic variants as not pathogenic
+```{r not pathogenic}
+codon3 <- data[data$annotation == 3, ]
+codon2 <- data[data$annotation == 2, ]
+codon1 <- data[data$annotation == 1, ]
+rRNA <- data[data$annotation == "rRNA", ]
+nonCoding <- data[data$annotation == "non_coding", ]
+```
+
+### 2D EDA plots of allele counts by plasmicity - these should all be on the same xy scale
+```{r trees}
+ggplot(data = data, mapping = aes(x = log_het, y = log_hom, color = annotation)) +
+  geom_point(alpha = 0.5, size = 2.5, aes(shape = pathogenic)) +
+  scale_color_manual(values = annColors) +
+  labs(title = "Many non-coding variants are obvious", x = "log number heteroplasmic variants", y = "log number homoplasmic variants") +
+  xlim(-7, 10) +
+  ylim(-7, 12.5) +
+  theme_minimal()
+ggsave("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/totMutCounts.pdf")
+
+data %>% filter(annotation == "non_coding") %>% 
+  ggplot(mapping = aes(x = log_het, y = log_hom, color = pathogenic)) +
+  geom_point(alpha = 0.5, size = 2.5, aes(shape = annotation)) +
+  scale_color_manual(values = c("pink", "darkgreen")) +
+  labs(title = "Pathogenic non-coding variants are less likely to be homoplasmic\nthan they are to be heteroplasmic", x = "log number heteroplasmic variants", y = "log number homoplasmic variants") +
+  xlim(-7, 10) +
+  ylim(-7, 12.5) +
+  theme_minimal()
+ggsave("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/ncMutCounts.pdf")
+
+data %>% filter(annotation == "1") %>% 
+  ggplot(mapping = aes(x = log_het, y = log_hom, color = pathogenic)) +
+  geom_point(alpha = 0.5, size = 2.5, aes(shape = annotation)) +
+  scale_color_manual(values = c("pink", "darkgreen")) +
+  labs(title = "Pathogenic codon position 1 variants are more likely to be heteroplasmic", x = "log number heteroplasmic variants", y = "log number homoplasmic variants") +
+  xlim(-7, 10) +
+  ylim(-7, 12.5) +
+  theme_minimal()
+ggsave("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/pos1MutCounts.pdf")
+
+data %>% filter(annotation == "2") %>% 
+  ggplot(mapping = aes(x = log_het, y = log_hom, color = pathogenic)) +
+  geom_point(alpha = 0.5, size = 2.5, aes(shape = annotation)) +
+  scale_color_manual(values = c("pink", "darkgreen")) +
+  labs(title = "Codon position 2 variants are more likely to be heteroplasmic", x = "log number heteroplasmic variants", y = "log number homoplasmic variants") +
+    xlim(-7, 10) +
+  ylim(-7, 12.5) +
+  theme_minimal()
+ggsave("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/pos2MutCounts.pdf")
+
+data %>% filter(annotation == "3") %>% 
+  ggplot(mapping = aes(x = log_het, y = log_hom, color = pathogenic)) +
+  geom_point(alpha = 0.5, size = 2.5, aes(shape = annotation)) +
+  scale_color_manual(values = c("pink", "darkgreen")) +
+  labs(title = "Codon position 3 variants are far more numerous than position 1 or 2 variants", x = "log number heteroplasmic variants", y = "log number homoplasmic variants", subtitle = "Pathogenic variants are distributed just like pathogenic non-coding variants") +
+  xlim(-7, 10) +
+  ylim(-7, 12.5) +
+  theme_minimal()
+ggsave("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/pos3MutCounts.pdf")
+
+data %>% filter(annotation == "tRNA") %>% 
+  ggplot(mapping = aes(x = log_het, y = log_hom, color = pathogenic)) +
+  geom_point(alpha = 0.5, size = 2.5, aes(shape = annotation)) +
+  scale_color_manual(values = c("pink", "darkgreen")) +
+  labs(title = "Pathogenic tRNA variants are indistinguishable from other variants", x = "log number heteroplasmic variants", y = "log number homoplasmic variants") +
+  xlim(-7, 10) +
+  ylim(-7, 12.5) +
+  theme_minimal()
+ggsave("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/tRNAMutCounts.pdf")
+
+data %>% filter(annotation == "anticodon") %>% 
+  ggplot(mapping = aes(x = log_het, y = log_hom, color = pathogenic)) +
+  geom_point(alpha = 0.5, size = 2.5, aes(shape = annotation)) +
+  scale_color_manual(values = c("pink", "darkgreen")) +
+  labs(title = "Anticodon variants are very rare", x = "log number heteroplasmic variants", y = "log number homoplasmic variants") +
+  xlim(-7, 10) +
+  ylim(-7, 12.5) +
+  theme_minimal()
+ggsave("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/acMutCounts.pdf")
+
+data %>% filter(annotation == "rRNA") %>% 
+  ggplot(mapping = aes(x = log_het, y = log_hom, color = pathogenic)) +
+  geom_point(alpha = 0.5, size = 2.5, aes(shape = annotation)) +
+  scale_color_manual(values = c("pink", "darkgreen")) +
+  labs(title = "Pathogenic rRNA variants seem equally likely to be heteroplasmic", x = "log number heteroplasmic variants", y = "log number homoplasmic variants") +
+  xlim(-7, 10) +
+  ylim(-7, 12.5) +
+  theme_minimal()
+ggsave("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/rRNAMutCounts.pdf")
+
+
+data %>% filter(annotation == "replication origin") %>% 
+  ggplot(mapping = aes(x = log_het, y = log_hom, color = pathogenic)) +
+  geom_point(alpha = 0.5, size = 2.5, aes(shape = annotation)) +
+  scale_color_manual(values = c("pink", "darkgreen")) +
+  labs(title = "Replication origin variants are rare and much less likely to be heteroplasmic", x = "log number heteroplasmic variants", y = "log number homoplasmic variants") +
+  xlim(-7, 10) +
+  ylim(-7, 12.5) +
+  theme_minimal()
+ggsave("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/orgMutCounts.pdf")
+
+```
+
+
+### Plots by mutation type
+```{r mutation plots}
+data %>% filter(mutation == "in-del") %>% 
+  ggplot(mapping = aes(x = log(counts_het), y = log(counts_hom), color = pathogenic)) +
+  geom_point(alpha = 0.5, size = 2.5, aes(shape = mutation)) +
+  scale_color_manual(values = c("pink", "darkgreen")) +
+  labs(title = "Insertion-deletion variants", x = "log number heteroplasmic variants", y = "log number homoplasmic variants") +
+  xlim(-7, 10) +
+  ylim(-7, 12.5) +
+  theme_minimal()
+ggsave("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/inDels.pdf")
+
+data %>% filter(mutation == "transition") %>% 
+  ggplot(mapping = aes(x = log(counts_het), y = log(counts_hom), color = pathogenic)) +
+  geom_point(alpha = 0.5, size = 2.5, aes(shape = mutation)) +
+  scale_color_manual(values = c("pink", "darkgreen")) +
+  labs(title = "Transition variants", x = "log number heteroplasmic variants", y = "log number homoplasmic variants") +
+  xlim(-7, 10) +
+  ylim(-7, 12.5) +
+  theme_minimal()
+ggsave("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/transitions.pdf")
+
+data %>% filter(mutation == "transversion") %>% 
+  ggplot(mapping = aes(x = log(counts_het), y = log(counts_hom), color = pathogenic)) +
+  geom_point(alpha = 0.5, size = 2.5, aes(shape = mutation)) +
+  scale_color_manual(values = c("pink", "darkgreen")) +
+  labs(title = "Transversion variants", x = "log number heteroplasmic variants", y = "log number homoplasmic variants") +
+  xlim(-7, 10) +
+  ylim(-7, 12.5) +
+  theme_minimal()
+ggsave("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/transitions.pdf")
+
+```
+
+### DFs by mutation type
+```{r mut DFs}
+transitions <- data[data$mutation == "transition", ]
+transversions <- data[data$mutation == "transversion", ]
+in_dels <- data[data$mutation == "in-del", ]
+```
+
+### Adding 'no' labels- only a few
+```{r no labels}
+data$pathogenic[data$annotation == 3 & data$log_hom > 11] = "no"
+data$pathogenic[data$annotation == 2 & data$log_hom > 8.5] = "no"
+data$pathogenic[data$annotation == 1 & data$log_hom > 11] = "no"
+data$pathogenic[data$annotation == "rRNA" & data$log_hom > 11] = "no"
+data$pathogenic[data$annotation == "anticodon"] = "yes"
+```
+
+### Calling variants 'no' based on variant frequencies by mutation type
+```{r mut calls}
+data$pathogenic[data$mutation == "in-del" & data$log_hom > 5] == "no" 
+data$pathogenic[data$mutation == "in-del" & data$log_het > 5] = "no"
+
+data$pathogenic[data$mutation == "transition" & data$log_hom > 11] = "no"
+
+data$pathogenic[data$mutation == "transversion" & data$log_het > 2.85] = "no"
+data$pathogenic[data$mutation == "transversion" & data$log_hom >= 8.08] = "no"
+```
+
+### Save yes/no data
+```{r save}
+binData <- data[data$pathogenic != "unknown",]
+str(binData)
+write_csv(binData, "/Users/leekapp/Desktop/CS254/Assignments/FinalProject/pathKnown.csv")
+```
+
+### numeric pathKnown
+```{r}
+numPathKnown <- binData
+numPathKnown$annotation <- as.factor(numPathKnown$annotation)
+numPathKnown$pathogenic <- as.factor(numPathKnown$pathogenic)
+numPathKnown$mutation <- as.factor(numPathKnown$mutation)
+str(numPathKnown)
+
+```
+
+```{r as numeric}
+numPathKnown$annotation <- as.numeric(numPathKnown$annotation)
+numPathKnown$pathogenic <- as.numeric(numPathKnown$pathogenic)
+numPathKnown$mutation <- as.numeric(numPathKnown$mutation)
+str(numPathKnown)
+```
+
+### Saving numericPathKnown
+```{r numPathKnown}
+write_csv(numPathKnown, "/Users/leekapp/Desktop/CS254/Assignments/FinalProject/numPathKnown.csv")
+```

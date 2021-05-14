@@ -1,0 +1,55 @@
+---
+title: "Prediction of the Pathogenicity of Mitochondrial DNA Mutations"
+author: "Lee Kapp"
+date: "3/19/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE)
+library(tidyverse);library(readxl)
+```
+
+### Data import
+
+```{r import}
+helixMT <- read_csv("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/helixData.csv")
+helixBases <- read_csv( "/Users/leekapp/Desktop/CS254/Assignments/FinalProject/helixBases.csv")
+invariant <- read_csv("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/invariant.csv")
+normTable <- read_csv("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/norm_mtDNA_table.csv")
+normTable <- normTable[-c(1)]
+```
+
+### Examining codon position representation among helix mtDB and invariant bases
+```{r pressure, echo=FALSE}
+invariant %>% filter(!is.na(annotation)) %>% 
+  ggplot(mapping = aes(x = annotation)) +
+    geom_bar() +
+    labs(title = "Distribution of codon positions among invariant bases", x = "codon position")
+    theme_minimal()
+    ggsave("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/invariantCodons.pdf")
+
+helixMT %>% filter(!is.na(annotation)) %>% 
+    ggplot(mapping = aes(x = annotation)) +
+    geom_bar() +
+    labs(title = "Distribution of codon positions among Helix mtDB", x = "codon position")
+    theme_minimal()
+    ggsave("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/helixCodons.pdf")
+    
+table(invariant$annotation)
+table(helixMT$annotation)
+```
+
+
+```{r proteins}
+protein <- helixMT %>% filter(feature == "protein_coding_gene")
+protein %>% group_by(gene) %>% 
+  ggplot(mapping = aes(x = annotation)) +
+    geom_bar() +
+    labs(title = "Distribution of codon positions among protein coding genes", x = "codon position", y = "Helix mtDB")
+    theme_minimal()
+  
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

@@ -1,0 +1,138 @@
+---
+title: "Classification Analysis of Helix mtDB"
+author: "Lee Kapp"
+date: "5/3/2021"
+output: html_document
+---
+
+```{r setup, include=, message=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse); library(readxl); library(GGally); library(magrittr); library(rstatix); library(corrplot);
+library(rpart); library(rpart.plot); library(rattle); library(class); library(heplots);
+library(MASS); library(caret); library(MVN)
+```
+
+### Data Import
+```{r import}
+pathKnown <- read.csv("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/pathKnown.csv")
+numPath <- read.csv("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/numPathKnown.csv")
+```
+
+### Some stats
+```{r spme plots}
+mvn(data=numPath[c(3, 6:9)], desc=F, multivariatePlot = "qq" ) #NOT multivariate normal but this is OK for LDA
+boxM(Y = as.matrix(numPath[,c(3, 7:9)]), group = numPath$pathogenic) ## fails the test with p-val <2e-16 - use QDA
+
+```
+
+### QDA
+```{r qda}
+helix.qda <- qda(pathogenic~annotation+mutation+log_hom+log_het, data=numPath, CV=T)
+helix.qda$class
+numPath$pathogenic
+
+table(predicted = helix.qda$class, 
+      actual = numPath$pathogenic) %>% 
+  confusionMatrix()
+```
+
+### KNN for Helix mtDB annotated mutations
+```{r knn}
+# standardizing the data
+helix_sd <- numPath %>% 
+  group_by(pathogenic) %>% 
+  mutate(across(log_hom:log_het, ~ . / sd(.))) %>% 
+  ungroup()
+
+N <- nrow(helix_sd)
+## Let's look at 4 - 8 for our choice of k
+k_choice <- 4:10
+
+# Vector to store the errors for different choices of k
+knn_error <- rep(-1, length(k_choice))
+
+# Looping through the different choices of k for knn
+for (i in 1:length(k_choice)){
+  
+  knn_temp <- class::knn.cv(train = helix_sd %>% 
+                            dplyr::select(annotation, mutation, log_hom, log_het), 
+                            cl = helix_sd$pathogenic, 
+                            k = k_choice[i])
+  # Calculating the error using cross validation for specific choice of k
+  knn_error[i] <- 1-sum(diag(table(helix_sd$pathogenic, knn_temp)))/N
+}
+
+cbind(k_choice, knn_error) # all choices of k give perfect classification
+```
+
+### KNN with k = 5
+```{r knn}
+trainIndex = sample(NROW(helix_sd), 0.8*nrow(helix_sd))
+train <- helix_sd[trainIndex, ]
+test <- helix_sd[-trainIndex, ]
+
+helix_knn <- class::knn(train = train %>% dplyr::select(annotation, mutation, log_hom, log_het), 
+                cl    = train$pathogenic,
+                test  = test %>% dplyr::select(annotation, mutation, log_hom, log_het),
+                k = 5, prob = T)
+helix_knn
+
+# Getting the predicted star type and 
+# the proportion of the nearest neighbors 
+# in that star type: max(k_i)/k
+table(predicted_type = helix_knn,
+      vote_prop = attr(helix_knn, which = "prob"))
+```
+
+### Helix classification tree
+```{r helix tree}
+#Priors
+path_prop <- pathKnown %$% table(pathogenic) %>% prop.table() # %$% exposes the variables in the data for the following function  - basically gets rid of table(wines$Cultivar) notation
+
+helix_tree <- rpart(pathogenic~annotation+mutation+log_hom+log_het,data=pathKnown, method="class")
+summary(helix_tree)
+```
+
+### Plotting the tree
+```{r the tree}
+pdf("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/helixFullTree.pdf")
+rpart.plot(helix_tree, main= "Helix mtDB Pathogenic Status Known Classification Tree", 
+           type=3, extra = 101)
+dev.off()
+```
+
+### Tree Confusion Matrix
+```{r}
+preds <- rpart.predict(helix_tree, newdata = pathKnown, type = "class")
+table(predicted = preds, 
+      actual = pathKnown$pathogenic) %>% 
+  confusionMatrix()
+```
+
+### Train/test classification tree
+```{r helix tree}
+helix_tttree <- rpart(pathogenic~annotation+mutation+log_hom+log_het,data=train, method="class")
+summary(helix_tttree)
+```
+
+### Plotting the train/test tree
+```{r the tree}
+pdf("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/helixTrainTree.pdf")
+rpart.plot(helix_tttree, main= "Helix mtDB Training Set Tree", 
+           type=3, extra = 101)
+dev.off()
+```
+
+### Test Data Tree Confusion Matrix
+```{r}
+preds <- rpart.predict(helix_tttree, newdata = test, type = "class")
+table(predicted = preds, 
+      actual = test$pathogenic) %>% 
+  confusionMatrix()
+```
+
+### Using the tree to predict pathogenicity of unannotated bases in the Helix mtDB
+```{r predictions}
+preds
+```
+

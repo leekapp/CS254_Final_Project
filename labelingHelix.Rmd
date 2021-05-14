@@ -1,0 +1,70 @@
+---
+title: "Labeling the Helix mtDB"
+author: "Lee Kapp"
+date: "4/15/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE)
+library(tidyverse)
+library(janitor)
+```
+
+### Data import
+```{r import}
+helixData <- read.csv('/Users/leekapp/Desktop/CS254/Assignments/FinalProject/helixData.csv')
+uniqueOverlaps <- read.csv('/Users/leekapp/Desktop/CS254/Assignments/FinalProject/uniqueOverlaps.csv')
+```
+
+### Eliminating duplicated MM alleles/features and empty columns
+```{r elimMM and nulls}
+helixData <- remove_empty(helixData)
+uniqueMM <- uniqueOverlaps %>% group_by(gene) %>% distinct(base, MM_allele, .keep_all = TRUE)
+```
+
+### Merging dataframes on base
+```{r merge}
+fullMerged <- merge(helixData, uniqueMM, by.x = "base", by.y = "base", all.x = T, all.y = T)
+fullMerged <- remove_empty(fullMerged)
+fullMerged$wildtype.y <- NULL
+fullMerged$gene.y <- NULL
+fullMerged$helix_feature.y <- NULL
+fullMerged$annotation.y <- NULL
+fullMerged$alleles.y <- NULL
+fullMerged <- fullMerged[-c(11)]
+dupBases <- duplicated(fullMerged$base)
+table(dupBases)
+dupedBases <- fullMerged[dupBases,]
+dupedMM <- dupedBases[!is.na(dupedBases$MM_allele), ]
+```
+### Renaming columns
+```{r renaming}
+fullMerged <- rename(fullMerged, gene = gene.x)
+fullMerged <- rename(fullMerged, allele = alleles.x)
+fullMerged <- rename(fullMerged, mutation = mutation.x)
+fullMerged <- rename(fullMerged, annotation = annotation.x)
+fullMerged <- rename(fullMerged, helix_feature = helix_feature.x)
+fullMerged <- rename(fullMerged, counts_hom = counts_hom.x)
+fullMerged <- rename(fullMerged, counts_het = counts_het.x)
+fullMerged <- rename(fullMerged, AF_hom = AF_hom.x)
+fullMerged <- rename(fullMerged, AF_het = AF_het.x)
+fullMerged <- rename(fullMerged, MM_mutation = mutation.y)
+fullMerged <- rename(fullMerged, MM_counts_hom = counts_hom.y)
+fullMerged <- rename(fullMerged, MM_counts_het = counts_het.y)
+fullMerged <- rename(fullMerged, MM_AF_hom = AF_hom.y)
+fullMerged <- rename(fullMerged, MM_AF_het = AF_het.y)
+fullMerged <- fullMerged[c(1,2,3,5,7:10,16:20,6,4,11:15,21)]
+
+```
+
+### Saving the data
+```{r save}
+write_csv(fullMerged, '/Users/leekapp/Desktop/CS254/Assignments/FinalProject/labeledHelix.csv')
+```
+
+### Sumary of MitoMap labels
+```{r MM labels}
+table(fullMerged$pathogenic)
+```
+

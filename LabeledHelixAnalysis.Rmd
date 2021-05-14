@@ -1,0 +1,292 @@
+---
+title: "Clustering Labeled Helix mtDB"
+author: "Lee Kapp"
+date: "4/16/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE)
+library(tidyverse); library(readxl); library(corrplot); library(GGally); library(factoextra)
+library(devtools); library(gridExtra); library(cluster); library(ggrepel); library(NbClust)
+library(randomcoloR); library(skimr); library(plot3D); library(MVN);library(heplots)
+```
+
+### Import of labeled helix mtDB
+```{r import}
+labeledHelix <- read_csv("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/labeledHelix.csv")
+```
+
+### Structure of data
+```{r structure}
+#labeledHelix$annotation <- ifelse(labeledHelix$annotation == 'anticodon', 4, labeledHelix$annotation)
+#table(labeledHelix$annotation)
+#labeledHelix$annotation <- as.numeric(labeledHelix$annotation)
+str(labeledHelix)
+table(labeledHelix$pathogenic)
+```
+
+### Isolating non-coding genes
+```{r structure}
+ncGenes <- c("MT-CRb", "MT-CR", "MT-NC1", "MT-NC10", "MT-NC2", "MT-NC3", "MT-NC4", "MT-NC5", "MT-NC6", "MT-NC7", "MT-NC8", "MT-NC9")
+ncIndex <- labeledHelix$gene %in% ncGenes
+ncHelix <- labeledHelix[ncIndex, ]
+table(ncHelix$pathogenic)
+```
+
+
+```{r structure}
+codingLabeled <- labeledHelix[!ncIndex, ]
+labeledDF <- data.frame(rbind(codingLabeled, ncHelix))
+table(labeledDF$pathogenic)
+labeledDF$pathogenic <- ifelse(is.na(labeledDF$pathogenic), "unknown", labeledDF$pathogenic)
+table(labeledDF$pathogenic)
+
+```
+
+### Color palette
+```{r 2D plots}
+annColors <- distinctColorPalette(8)
+```
+
+
+### Decision Tree Data Frame
+```{r treeDF}
+#dropping redundant columns
+treeDF <- labeledDF[, -c(3,6,8:12,14,16,17,18:21)]
+treeDF$annotation <- ifelse(treeDF$gene =="MT-TF" & is.na(treeDF$annotation), "tRNA", treeDF$annotation)
+treeDF$annotation <- ifelse(treeDF$gene =="MT-RNR1" & is.na(treeDF$annotation), "rRNA", treeDF$annotation)
+treeDF$annotation <- ifelse(treeDF$gene =="MT-RNR2" & is.na(treeDF$annotation), "rRNA", treeDF$annotation)
+treeDF$annotation <- ifelse(treeDF$gene =="MT-TV" & is.na(treeDF$annotation), "tRNA", treeDF$annotation)
+treeDF$annotation <- ifelse(treeDF$gene =="MT-TL1" & is.na(treeDF$annotation), "tRNA", treeDF$annotation)
+treeDF$annotation <- ifelse(treeDF$gene =="MT-TI" & is.na(treeDF$annotation), "tRNA", treeDF$annotation)
+treeDF$annotation <- ifelse(treeDF$gene =="MT-TQ" & is.na(treeDF$annotation), "tRNA", treeDF$annotation)
+treeDF$annotation <- ifelse(treeDF$gene =="MT-TM" & is.na(treeDF$annotation), "tRNA", treeDF$annotation)
+treeDF$annotation <- ifelse(treeDF$gene =="MT-TW" & is.na(treeDF$annotation), "tRNA", treeDF$annotation)
+treeDF$annotation <- ifelse(treeDF$gene =="MT-TA" & is.na(treeDF$annotation), "tRNA", treeDF$annotation)
+treeDF$annotation <- ifelse(treeDF$gene =="MT-TN" & is.na(treeDF$annotation), "tRNA", treeDF$annotation)
+treeDF$annotation <- ifelse(treeDF$gene =="MT-TC" & is.na(treeDF$annotation), "tRNA", treeDF$annotation)
+treeDF$annotation <- ifelse(treeDF$gene =="MT-TY" & is.na(treeDF$annotation), "tRNA", treeDF$annotation)
+treeDF$annotation <- ifelse(treeDF$gene =="MT-TS1" & is.na(treeDF$annotation), "tRNA", treeDF$annotation)
+treeDF$annotation <- ifelse(treeDF$gene =="MT-TD" & is.na(treeDF$annotation), "tRNA", treeDF$annotation)
+treeDF$annotation <- ifelse(treeDF$gene =="MT-TK" & is.na(treeDF$annotation), "tRNA", treeDF$annotation)
+treeDF$annotation <- ifelse(treeDF$gene =="MT-TG" & is.na(treeDF$annotation), "tRNA", treeDF$annotation)
+treeDF$annotation <- ifelse(treeDF$gene =="MT-TR" & is.na(treeDF$annotation), "tRNA", treeDF$annotation)
+treeDF$annotation <- ifelse(treeDF$gene =="MT-TH" & is.na(treeDF$annotation), "tRNA", treeDF$annotation)
+treeDF$annotation <- ifelse(treeDF$gene =="MT-TS2" & is.na(treeDF$annotation), "tRNA", treeDF$annotation)
+treeDF$annotation <- ifelse(treeDF$gene =="MT-TL2" & is.na(treeDF$annotation), "tRNA", treeDF$annotation)
+treeDF$annotation <- ifelse(treeDF$gene =="MT-TE" & is.na(treeDF$annotation), "tRNA", treeDF$annotation)
+treeDF$annotation <- ifelse(treeDF$gene =="MT-TT" & is.na(treeDF$annotation), "tRNA", treeDF$annotation)
+treeDF$annotation <- ifelse(treeDF$gene =="MT-TP" & is.na(treeDF$annotation), "tRNA", treeDF$annotation)
+treeDF$annotation <- ifelse(treeDF$gene =="MT-OLR", "replication origin", treeDF$annotation)
+treeDF$annotation <- ifelse(treeDF$gene =="MT-CRb" & is.na(treeDF$annotation), "non_coding", treeDF$annotation)
+treeDF$annotation <- ifelse(treeDF$gene =="MT-CR" & is.na(treeDF$annotation), "non_coding", treeDF$annotation)
+treeDF$annotation <- ifelse(treeDF$gene %in% c("MT-NC1", "MT-NC2", "MT-NC3", "MT-NC4", "MT-NC5", "MT-NC6", "MT-NC7", "MT-NC8", "MT-NC9", "MT-NC10") & is.na(treeDF$annotation), "non_coding", treeDF$annotation)
+
+```
+
+
+### treeDF Structure
+```{r str treeDF}
+str(treeDF)
+treeDF$annotation <- as.factor(treeDF$annotation)
+treeDF$pathogenic <- as.factor(treeDF$pathogenic)
+treeDF$mutation <- as.factor(treeDF$mutation)
+str(treeDF)
+```
+
+### writing treeDF with cols changed to factors
+```{r writing treeDF}
+write_csv(treeDF, "/Users/leekapp/Desktop/CS254/Assignments/FinalProject/treeDF.csv")
+```
+
+### Saving as numeric treeDF
+```{r}
+str(treeDF)
+treeDF$annotation <- as.numeric(treeDF$annotation)
+treeDF$pathogenic <- as.numeric(treeDF$pathogenic)
+treeDF$mutation <- as.numeric(treeDF$mutation)
+str(treeDF)
+write_csv(treeDF, "/Users/leekapp/Desktop/CS254/Assignments/FinalProject/numericDF.csv") 
+```
+
+### 2D EDA plots of allele counts by plasmicity - these should all be on the same xy scale
+```{r trees}
+ggplot(data = treeDF, mapping = aes(x = log(counts_hom), y = log(counts_het), color = annotation)) +
+  geom_point(alpha = 0.5, size = 2.5, aes(shape = pathogenic)) +
+  scale_color_manual(values = annColors) +
+  labs(title = "Many non-coding variants are obvious", x = "log number heteroplasmic variants", y = "log number homoplasmic variants") +
+  xlim(0, 12.5) +
+  ylim(0, 10) +
+  theme_minimal()
+ggsave("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/totMutCounts.pdf")
+
+treeDF %>% filter(annotation == "non_coding") %>% 
+  ggplot(mapping = aes(x = log(counts_hom), y = log(counts_het), color = pathogenic)) +
+  geom_point(alpha = 0.5, size = 2.5, aes(shape = annotation)) +
+  scale_color_manual(values = c("orange", "blue")) +
+  labs(title = "Pathogenic non-coding variants are less likely to be homoplasmic\nthan they are to be heteroplasmic", x = "log number heteroplasmic variants", y = "log number homoplasmic variants") +
+  xlim(0, 12.5) +
+  ylim(0, 10) +
+  theme_minimal()
+ggsave("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/ncMutCounts.pdf")
+
+treeDF %>% filter(annotation == "1") %>% 
+  ggplot(mapping = aes(x = log(counts_hom), y = log(counts_het), color = pathogenic)) +
+  geom_point(alpha = 0.5, size = 2.5, aes(shape = annotation)) +
+  scale_color_manual(values = c("orange", "blue")) +
+  labs(title = "Codon position 1 variants are less likely to be homoplasmic", x = "log number heteroplasmic variants", y = "log number homoplasmic variants") +
+  xlim(0, 12.5) +
+  ylim(0, 10) +
+  theme_minimal()
+ggsave("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/pos1MutCounts.pdf")
+
+treeDF %>% filter(annotation == "2") %>% 
+  ggplot(mapping = aes(x = log(counts_hom), y = log(counts_het), color = pathogenic)) +
+  geom_point(alpha = 0.5, size = 2.5, aes(shape = annotation)) +
+  scale_color_manual(values = c("orange", "blue")) +
+  labs(title = "Codon position 2 variants are less likely to be homoplasmic", x = "log number heteroplasmic variants", y = "log number homoplasmic variants") +
+    xlim(0, 12.5) +
+  ylim(0, 10) +
+  theme_minimal()
+ggsave("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/pos2MutCounts.pdf")
+
+treeDF %>% filter(annotation == "3") %>% 
+  ggplot(mapping = aes(x = log(counts_hom), y = log(counts_het), color = pathogenic)) +
+  geom_point(alpha = 0.5, size = 2.5, aes(shape = annotation)) +
+  scale_color_manual(values = c("orange", "blue")) +
+  labs(title = "Codon position 3 variants are far more numerous than position 1 or 2 variants", x = "log number heteroplasmic variants", y = "log number homoplasmic variants", subtitle = "Pathogenic variants are distributed just like pathogenic non-coding variants") +
+  xlim(0, 12.5) +
+  ylim(0, 10) +
+  theme_minimal()
+ggsave("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/pos3MutCounts.pdf")
+
+treeDF %>% filter(annotation == "tRNA") %>% 
+  ggplot(mapping = aes(x = log(counts_hom), y = log(counts_het), color = pathogenic)) +
+  geom_point(alpha = 0.5, size = 2.5, aes(shape = annotation)) +
+  scale_color_manual(values = c("orange", "blue")) +
+  labs(title = "Pathogenic tRNA variants are indistinguishable from other variants", x = "log number heteroplasmic variants", y = "log number homoplasmic variants") +
+  xlim(0, 12.5) +
+  ylim(0, 10) +
+  theme_minimal()
+ggsave("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/tRNAMutCounts.pdf")
+
+treeDF %>% filter(annotation == "anticodon") %>% 
+  ggplot(mapping = aes(x = log(counts_hom), y = log(counts_het), color = pathogenic)) +
+  geom_point(alpha = 0.5, size = 2.5, aes(shape = annotation)) +
+  scale_color_manual(values = c("orange", "blue")) +
+  labs(title = "Anticodon variants are very rare", x = "log number heteroplasmic variants", y = "log number homoplasmic variants") +
+  xlim(0, 12.5) +
+  ylim(0, 10) +
+  theme_minimal()
+ggsave("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/acMutCounts.pdf")
+
+treeDF %>% filter(annotation == "rRNA") %>% 
+  ggplot(mapping = aes(x = log(counts_hom), y = log(counts_het), color = pathogenic)) +
+  geom_point(alpha = 0.5, size = 2.5, aes(shape = annotation)) +
+  scale_color_manual(values = c("orange", "blue")) +
+  labs(title = "Pathogenic rRNA variants are more likely to be heteroplasmic", x = "log number heteroplasmic variants", y = "log number homoplasmic variants") +
+  xlim(0, 12.5) +
+  ylim(0, 10) +
+  theme_minimal()
+ggsave("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/rRNAMutCounts.pdf")
+
+
+treeDF %>% filter(annotation == "replication origin") %>% 
+  ggplot(mapping = aes(x = log(counts_hom), y = log(counts_het), color = pathogenic)) +
+  geom_point(alpha = 0.5, size = 2.5, aes(shape = annotation)) +
+  scale_color_manual(values = c("orange", "blue")) +
+  labs(title = "Replication origin variants are rare and much less likely to be homoplasmic", x = "log number heteroplasmic variants", y = "log number homoplasmic variants") +
+  xlim(0, 12.5) +
+  ylim(0, 10) +
+  theme_minimal()
+ggsave("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/orgMutCounts.pdf")
+
+```
+
+### Log Transformation
+```{r structure}
+# take ln of allele frequencies
+nonZero <- treeDF %>% filter(counts_hom !=0 & counts_het != 0)
+logged <- nonZero
+logged$counts_hom <- log(logged$counts_hom)
+logged$counts_het <- log(logged$counts_het)
+logged <- dplyr::rename(logged, log_counts_hom = counts_hom)
+logged <- dplyr::rename(logged, log_counts_het = counts_het)
+```
+
+### Histograms after log transformation
+```{r logged EDA}
+ggplot(data = logged, mapping = aes(x = log_counts_hom)) +
+  geom_histogram() +
+  theme_minimal()
+ggplot(data = logged, mapping = aes(x = log_counts_het)) +
+  geom_histogram() +
+  theme_minimal()
+```
+
+### Logged DF structure
+```{r str logged}
+str(logged)
+logged$annotation <- as.numeric(logged$annotation)
+logged$pathogenic <- as.numeric(logged$pathogenic)
+logged$mutation <- as.numeric(logged$mutation)
+str(logged)
+```
+
+### Matrices of quantitative columns 
+```{r matrices}
+
+S <- var(logged[c(3:7)])
+print(S)
+R <- cor(logged[c(3:7)])
+writeLines("")
+print(R)
+writeLines("")
+#pdf(file = "/Users/leekapp/Desktop/STAT223/Assignments/HW2/q2corrplot.pdf")
+corrplot(R, method = c("shade"),type = "upper", mar=c(2,0,2,1), tl.cex = 1, addCoef.col = "red")
+
+```
+
+### PCA of annotated data
+```{r PCA}
+helixPCA <- prcomp(logged[c(3:7)])
+summary(helixPCA)
+plot(helixPCA$x[,2]~helixPCA$x[,1], pch=19, col=3, ylim=c(-6,4), xlim=c(-6,4),
+     xlab="PC1", ylab="PC2", main="Plot of first two PCs")
+screeplot(helixPCA,  npcs=5, type="lines", pch=19, col=4)
+helixPCA
+# annCluster3 <- kmeans(logged[c(3:7)], centers=6, nstart=20)
+# annCluster3
+# fviz_cluster(annCluster3, geom = "point", data = logged[c(1,3,4)], ellipse = FALSE) + 
+#   ggtitle("Clustering of Labeled Helix mtDB: k = 3")  + 
+#   theme_minimal() +
+#   theme(legend.position = "none")
+```
+
+### 3Dplot of first 3 PCs
+```{r 3Dplot}
+x <- helixPCA$x[,1]
+y <- helixPCA$x[,2]
+z <- helixPCA$x[,3]
+rgl_init()
+rgl.spheres(x, y, z, r = 0.2, color = "yellow") 
+rgl_add_axes(x, y, z)
+```
+
+### Import of numeric DF
+```{r numeric import}
+numericDF <- read_csv("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/numericDF.csv")
+str(numericDF)
+table(numericDF$annotation)
+
+```
+
+
+
+### LDA/QDA
+```{r lda/qda}
+mvn(data=numericDF[c(3:7)], desc=F, multivariatePlot = "qq" ) #NOT multivariate normal but this is OK for LDA
+boxM(numericDF[c(3:5,7)], numericDF$pathogenic) ## fails the test with p-val <2e-16 - use QDA
+```
+

@@ -1,0 +1,170 @@
+---
+title: "Merging MitoMap candidate and confirmed pathogenic mutations with the invariant bases and detected variants from Helix mtDB"
+author: "Lee Kapp"
+date: "3/20/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse);
+```
+
+### Data Import
+```{r import}
+invariant <- read.csv("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/invariant.csv")
+codingVars <- read.csv("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/pathCodingVars.csv")
+RNAVars <- read.csv("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/totPathRNA.csv")
+helixMT <- read.csv("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/helixData.csv")
+helixMT <- read.csv("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/helixData.csv")
+normTbl <- read.csv("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/norm_mtDNA_table.csv")
+```
+
+### Joining helix invariants with MitoMap variants
+These are the invariant bases according to the Helix mtDB and their corresponding candidate pathogenic mutations from MitoMap * These bases are absent from the Helix mtDB * Plasmicity data is only from MitoMap
+```{r invariant joins}
+invCodingOverlap <- inner_join(invariant, codingVars, by = "base")
+invCodingOverlap <- invCodingOverlap[-c(5,6,7)]
+invCodingOverlap <- rename(invCodingOverlap, wildtype = wildtype.x)
+invCodingOverlap <- rename(invCodingOverlap, annotation = annotation.x)
+invCodingOverlap <- rename(invCodingOverlap, gene = gene.x)
+
+invRNAOverlap <- inner_join(invariant, RNAVars, by = "base")
+invRNAOverlap <- invRNAOverlap[-c(5,6,7)]
+invRNAOverlap <- rename(invRNAOverlap, wildtype = wildtype.x)
+invRNAOverlap <- rename(invRNAOverlap, annotation = annotation.x)
+invRNAOverlap <- rename(invRNAOverlap, gene = gene.x)
+
+```
+
+### Joining helix mtDB with MitoMap RNA variants
+These are the variable bases listed in the Helix mtDB and their corresponding candidate pathogenic mutations from MitoMap
+```{r helixmtDB RNA joins}
+helRNAOverlap <- inner_join(helixMT, RNAVars, by = "base")
+
+helRNAOverlap <- helRNAOverlap[-c(2,13,14)]
+helRNAOverlap <- rename(helRNAOverlap, gene = gene.x)
+helRNAOverlap <- rename(helRNAOverlap, annotation = annotation.x)
+helRNAOverlap <- rename(helRNAOverlap, MM_allele = allele) #rename allele as "MitoMap" allele
+helRNAOverlap <- rename(helRNAOverlap, helix_feature = feature)
+helRNAOverlap <- rename(helRNAOverlap, MM_feature = RNA)
+helRNAOverlap <- helRNAOverlap[c(1,11,2,12,9,10,4,3,13,14,15,5,6,7,8,16)]
+rownames(helRNAOverlap)<-1:nrow(helRNAOverlap)
+
+helRNAOverlap$homoplasmic[helRNAOverlap$counts_hom !=0] <- "yes"
+helRNAOverlap$heteroplasmic[helRNAOverlap$counts_het !=0] <- "yes"
+helRNAOverlap$homoplasmic[helRNAOverlap$counts_hom ==0] <- "no"
+helRNAOverlap$heteroplasmic[helRNAOverlap$counts_het ==0] <- "no"
+helRNAOverlap <- helRNAOverlap[c(1,2,7,3,5,6,8,4,9,10:16)]
+```
+
+### Joining helix mtDB with MitoMap Coding variants
+These are the variable bases listed in the Helix mtDB and their corresponding candidate pathogenic mutations from MitoMap
+```{r helixmtDB coding joins}
+helCodingOverlap <- inner_join(helixMT, codingVars, by = "base")
+helCodingOverlap <- helCodingOverlap[-c(2,13,14)]
+helCodingOverlap <- rename(helCodingOverlap, gene = gene.x)
+helCodingOverlap <- rename(helCodingOverlap, annotation = annotation.x)
+helCodingOverlap <- rename(helCodingOverlap, MM_allele = allele) #rename allele as "MitoMap" allele
+helCodingOverlap <- rename(helCodingOverlap, helix_feature = feature)
+helCodingOverlap <- rename(helCodingOverlap, MM_feature = amino_acid_change)
+helCodingOverlap <- helCodingOverlap[c(1,11,2,12,9,10,4,3,13,14,15,5,6,7,8,16)]
+rownames(helCodingOverlap)<-1:nrow(helCodingOverlap)
+
+helCodingOverlap$homoplasmic[helCodingOverlap$counts_hom !=0] <- "yes"
+helCodingOverlap$heteroplasmic[helCodingOverlap$counts_het !=0] <- "yes"
+helCodingOverlap$homoplasmic[helCodingOverlap$counts_hom ==0] <- "no"
+helCodingOverlap$heteroplasmic[helCodingOverlap$counts_het ==0] <- "no"
+helCodingOverlap <- helCodingOverlap[c(1,2,7,3,5,6,8,4,9,10:16)]
+```
+
+### Writing the data to CSV files
+```{r write data}
+write_csv(helRNAOverlap, "/Users/leekapp/Desktop/CS254/Assignments/FinalProject/helRNAOverlap.csv")
+write_csv(helCodingOverlap, "/Users/leekapp/Desktop/CS254/Assignments/FinalProject/helCodingOverlap.csv")
+write_csv(invRNAOverlap, "/Users/leekapp/Desktop/CS254/Assignments/FinalProject/invRNAOverlap.csv")
+write_csv(invCodingOverlap, "/Users/leekapp/Desktop/CS254/Assignments/FinalProject/invCodingOverlap.csv")
+```
+
+### Combining RNA and coding variants in the Helix mtDB that are also found in MitoMap
+```{r pooling overlaps}
+totHelMitoVars <- rbind(helCodingOverlap, helRNAOverlap)
+write_csv(totHelMitoVars, "/Users/leekapp/Desktop/CS254/Assignments/FinalProject/totHelMitoVars.csv")
+```
+
+### Making a table based on candidate pathogenic Helix mtDB variants
+```{r tot table}
+### Aggregation per gene - still need to normalize counts per gene to gene length
+allelesPerGene <- as.data.frame(table(totHelMitoVars$gene, totHelMitoVars$mutation))
+colnames(allelesPerGene) <- c('gene', 'allele', 'count')
+
+## making a table in wide format by splitting long format by allele type
+indels <- allelesPerGene %>% filter(allele == "in-del")
+indels <- indels[-c(2)]
+colnames(indels) <- c('gene', 'indels')
+transitions <- allelesPerGene %>% filter(allele == "transition")
+transitions <- transitions[-c(2)]
+colnames(transitions) <- c('gene', 'transitions')
+transversions <- allelesPerGene %>% filter(allele == "transversion")
+transversions <- transversions[-c(2)]
+colnames(transversions) <- c('gene', 'transversions')
+
+## Putting the columns together for wide table
+alleleCounts <- inner_join(indels, transitions)
+alleleCounts <- inner_join(alleleCounts, transversions)
+alleleCounts <- alleleCounts %>% filter(indels !=0 | transitions !=0 | transversions !=0)
+
+## Aggregating by plasmicity
+hom_rows <- rowsum(totHelMitoVars[12], totHelMitoVars$gene)
+het_rows <- rowsum(totHelMitoVars[14], totHelMitoVars$gene)
+plasmicity <- cbind(hom_rows, het_rows)
+colnames(plasmicity) <- c('hom_counts', 'het_counts')
+totOverlap_table <- cbind(alleleCounts, plasmicity)
+
+## adding to the wide table
+totOverlap_table <- cbind(alleleCounts, plasmicity)
+rownames(totOverlap_table)<-1:nrow(totOverlap_table)
+
+## getting total counts of indels, transitions, and transversions
+totOverlap_table$totTypeCounts <- rowSums(totOverlap_table[c(2:4)])
+
+## have to add column of gene lengths
+mtTable <- read.csv("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/mtDNA_table.csv")
+geneLengths <- data.frame(mtTable$gene, mtTable$length)
+colnames(geneLengths) <- c("gene", "length")
+
+totOverlap_table <- inner_join(totOverlap_table, geneLengths, by = "gene")
+
+### normalizing hom and het counts per base pair
+totOverlap_table$hom_perbp <- totOverlap_table$hom_counts/totOverlap_table$length
+totOverlap_table$het_perbp <- totOverlap_table$het_counts/totOverlap_table$length
+
+normTotOverlap <- totOverlap_table
+normTotOverlap$indels <- normTotOverlap$indels/normTotOverlap$totTypeCounts
+normTotOverlap$transitions <- normTotOverlap$transitions/normTotOverlap$totTypeCounts
+normTotOverlap$transversions <- normTotOverlap$transversions/normTotOverlap$totTypeCounts
+normTotOverlap <- normTotOverlap[-c(5:8)]
+```
+
+### Adding sequence type and description
+```{r RNA table}
+featuresPerGene <- as.data.frame(table(normTbl$gene, normTbl$seq_type, normTbl$description))
+colnames(featuresPerGene) <- c("gene", "seq_type", "description", "freq")
+featuresPerGene <- featuresPerGene %>% filter(freq != 0)
+normTotOverlap <- inner_join(normTotOverlap, featuresPerGene, by = "gene")
+normTotOverlap <- normTotOverlap[-c(9)] # dropping freq
+
+### writing data to file
+write_csv(normTotOverlap, "/Users/leekapp/Desktop/CS254/Assignments/FinalProject/normHelMitoVars.csv")
+
+```
+
+### Combining invariant nucleotides based on Helix mtDB that also overlap with MitoMap
+```{r inv mito}
+invCodingOverlap <- rename(invCodingOverlap, change = amino_acid_change)
+invRNAOverlap <- rename(invRNAOverlap, change = RNA)
+invTotOverlap <- rbind(invCodingOverlap, invRNAOverlap)
+write.csv(invTotOverlap, "/Users/leekapp/Desktop/CS254/Assignments/FinalProject/invTotOverlap.csv")
+```
+
+

@@ -1,0 +1,99 @@
+---
+title: "Per bp Summary of Random Forest Predictions"
+author: "Lee Kapp"
+date: "5/13/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse);
+```
+
+### Data Import
+```{r import}
+predDF <- read.csv("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/annotatedRndPredDF1.csv")
+predDF <- predDF[-1]
+normTbl <- read.csv("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/norm_mtDNA_table.csv")
+normTbl <- normTbl[-1]
+```
+
+### Filtering for prediction == 'yes'
+```{r yes only}
+predDF <- predDF %>% filter(prediction == 2)
+write_csv(predDF, "/Users/leekapp/Desktop/CS254/Assignments/FinalProject/predPathYes.csv")
+```
+
+### Filtering for Replication origin mutations
+```{r origin}
+ori <- predDF %>% filter(annotation == "replication origin")
+```
+
+
+
+### Making a table based on predicted pathogenic Helix mtDB variants
+```{r tot table}
+### Aggregation per gene - still need to normalize counts per gene to gene length
+allelesPerGene <- as.data.frame(table(predDF$gene, predDF$mutation))
+colnames(allelesPerGene) <- c('gene', 'allele', 'count')
+
+## making a table in wide format by splitting long format by allele type
+indels <- allelesPerGene %>% filter(allele == "in-del")
+indels <- indels[-c(2)]
+colnames(indels) <- c('gene', 'indels')
+transitions <- allelesPerGene %>% filter(allele == "transition")
+transitions <- transitions[-c(2)]
+colnames(transitions) <- c('gene', 'transitions')
+transversions <- allelesPerGene %>% filter(allele == "transversion")
+transversions <- transversions[-c(2)]
+colnames(transversions) <- c('gene', 'transversions')
+
+## Putting the columns together for wide table
+alleleCounts <- inner_join(indels, transitions)
+alleleCounts <- inner_join(alleleCounts, transversions)
+alleleCounts <- alleleCounts %>% filter(indels !=0 | transitions !=0 | transversions !=0)
+
+## Aggregating by plasmicity
+hom_rows <- rowsum(predDF[4], predDF$gene)
+het_rows <- rowsum(predDF[5], predDF$gene)
+plasmicity <- cbind(hom_rows, het_rows)
+colnames(plasmicity) <- c('hom_counts', 'het_counts')
+totPred_table <- cbind(alleleCounts, plasmicity)
+
+## adding to the wide table
+totPred_table <- cbind(alleleCounts, plasmicity)
+rownames(totPred_table)<-1:nrow(totPred_table)
+
+## getting total counts of indels, transitions, and transversions
+totPred_table$totTypeCounts <- rowSums(totPred_table[c(2:4)])
+
+## have to add column of gene lengths
+mtTable <- read.csv("/Users/leekapp/Desktop/CS254/Assignments/FinalProject/mtDNA_table.csv")
+geneLengths <- data.frame(mtTable$gene, mtTable$length)
+colnames(geneLengths) <- c("gene", "length")
+
+totPred_table <- inner_join(totPred_table, geneLengths, by = "gene")
+
+### normalizing hom and het counts per base pair
+totPred_table$hom_perbp <- totPred_table$hom_counts/totPred_table$length
+totPred_table$het_perbp <- totPred_table$het_counts/totPred_table$length
+
+normPred_table <- totPred_table
+normPred_table$indels <- normPred_table$indels/normPred_table$totTypeCounts
+normPred_table$transitions <- normPred_table$transitions/normPred_table$totTypeCounts
+normPred_table$transversions <- normPred_table$transversions/normPred_table$totTypeCounts
+normPred_table <- normPred_table[-c(5:8)]
+```
+
+### Adding sequence type and description
+```{r RNA table}
+featuresPerGene <- as.data.frame(table(normTbl$gene, normTbl$seq_type, normTbl$description))
+colnames(featuresPerGene) <- c("gene", "seq_type", "description", "freq")
+featuresPerGene <- featuresPerGene %>% filter(freq != 0)
+normPred_table <- inner_join(normPred_table, featuresPerGene, by = "gene")
+normPred_table <- normPred_table[-c(9)] # dropping freq
+
+### writing data to file
+write_csv(normPred_table, "/Users/leekapp/Desktop/CS254/Assignments/FinalProject/normPredPath.csv")
+
+```
