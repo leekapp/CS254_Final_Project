@@ -117,13 +117,13 @@ Due to the evolutionary constraints on expressed sequences, we expected to find 
 
 ### Figure 6. Indels are more likely among candidate pathogenic protein coding variants 
 
-<img src="images/candProbyMut.png" alt="mitomap protein alleles by mutation" width=350px>
+<img src="images/candProByMut.png" alt="mitomap protein alleles by mutation" width=350px>
 
 The least certain aspect of the HelixMTtdb is the classification of allele plasmicity.  The plasmicity of variants in the HelixMTtdb was determined by examining the variety of sequence reads obtained from cheek cells present in saliva samples. If invariant sequences were recovered for a given allele, it was classified as homoplasmic.  In contrast, if a mixture of sequences was reliably obtained for an allele from a given sample, it was classified as heteroplasmic.  However, as most mitochondrial diseases affect muscle cells and and the nervous system, the relevance of the Helix plasmicity classifications towards predicting the pathogenicity of variants is unclear, especially since mitochondria are not evenly distributed to all cells during embryonic development. Also, mutations that might be harmful in one cell type may not be harmful in another cell type. Thus, the plasmicity of mutations tolerated in cheek cells may not be relevant to the prediction of mitochondrial disease risk. It would have been ideal to have obtained mtDNA from muscle biopsies, but not very practical for sampling a very large number of individuals, as was done by Helix.  We must work with the data we have and not the data we wish we had. In general, however, the allele frequencies of homoplasmic variants appear to be much higher ( ≥ 2 orders of magnitude) than for heteroplasmic alleles at the same base (Figure 7).
 
 ### Figure 7. Homoplasmic variants far outnumber heteroplasmic variants per gene
 
-<img src="images/helixCandHomoHetbyGene.png" alt="protein versus non-coding Helix alleles by mutation" width=1000px>
+<img src="images/helixCandHomoHetByGene.png" alt="protein versus non-coding Helix alleles by mutation" width=1000px>
 
 We examined the distributions of variants shared between the Helix mtDB and the MitoMap collection of pathogenic variants by plotting the logarithm of homoplasmic alleles vs. the logarithm of heteroplasmic alleles detected for each variant (Figure 8, pathogenic variants are colored green, heteroplasmic variants left, homoplasmic, right).
 
@@ -228,7 +228,7 @@ A plot of the number of predicted pathogenic variants by codon position (Figure 
 
 ### Figure 14. A random forest fails to distinguish between codon positions for pathogenic variants
 
-<img src="images/predPathbyCodon.png" alt="random forest predictions by codon position" width=350px>
+<img src="images/predPathByCodon.png" alt="random forest predictions by codon position" width=350px>
 
 It appears that allele frequency is the primary feature being differentiated. Very few mutations within non-coding sequences are present in both the HelixMTdb and the MitoMap collection of reported pathogenic variants (Figure 15, left).
 
