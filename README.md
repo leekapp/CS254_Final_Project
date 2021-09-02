@@ -1,10 +1,10 @@
 <!-- This is the README for CS254 (Machine Learning) Final Project -->
 
-# Prediction of the Pathogenicity of Mutations in the Helix Mitochondrial Genome Mutation Database (HelixMTDdb)
+# Predicting the Pathogenicity of Mutations in the Helix Mitochondrial Genome Mutation Database (HelixMTdb)
 
 ## Introduction
 
-Mitochondria are essential mediators of fat and carbohydrate metabolism in all eukaryotic organisms.  They are likely descended from a free-living bacterial ancestor that took up residence within a eukaryotic cell more than one billion years ago.  Reflecting this evolutionary history, mitochondria are enveloped in a double membrane, produce their own ribosomal RNA, and contain their own circular, bacterial-like genome (mtDNA) that encodes 13 proteins involved in the electron transport chain, 22 tRNAs, and 2 ribosomal RNAs (Figure 1).  Mutations in mtDNA are relatively common due mainly to their oxidizing environment and the 10-fold higher mutation rate of mitochondrial DNA polymerase compared to nuclear DNA polymerases.  Most variation in mtDNA sequences is confined to the non-coding control region, the D-loop, which mediates mtDNA replication, and has been used to infer maternal ancestry in humans, as all mtDNA is maternally inherited.  The number of mitochondria per cell body varies widely among tissues, with the highest numbers in oocytes, neurons, liver and muscle cells.  The number of mtDNA copies per mitochindrion varies per cell and mutations may arise independently within any one of them. Consequently, most cells contain an ensemble of mitochondria bearing distinct genomes, a condition known as heteroplasmy.  In the case of homoplasmy, the composition of mitochondria within a cell is uniform.  
+Mitochondria are essential mediators of fat and carbohydrate metabolism in all eukaryotic organisms.  They are likely descended from a free-living bacterial ancestor that took up residence within a eukaryotic cell more than one billion years ago.  Reflecting this evolutionary history, mitochondria are enveloped in a double membrane, produce their own ribosomal RNA, and contain their own circular, bacterial-like genome (mtDNA) that encodes 13 proteins involved in the electron transport chain, 22 tRNAs, and 2 ribosomal RNAs (Figure 1).  Mutations in mtDNA are relatively common due mainly to their oxidizing environment and the 10-fold higher mutation rate of mitochondrial DNA polymerase compared to nuclear DNA polymerases.  Most variation in mtDNA sequences is confined to the non-coding control region, the D-loop, which mediates mtDNA replication and has been used to infer maternal ancestry in humans, as all mtDNA is maternally inherited.  The number of mitochondria per cell body varies widely among tissues, with the highest numbers in oocytes, neurons, liver and muscle cells.  The number of mtDNA copies per mitochindrion varies per cell and mutations may arise independently within any one of them. Consequently, most cells contain an ensemble of mitochondria bearing distinct genomes, a condition known as heteroplasmy.  In the case of homoplasmy, the composition of mitochondria within a cell is uniform.  
 
 ### Figure 1. Human mtDNA
 
@@ -68,7 +68,7 @@ The Helix data are unlabeled, regarding the potential pathogenicity of alleles. 
 
 ## Exploratory Data Analysis
 
-The HelixMTDdb lists variants found at 10,253 nucleotides out of the entire 16,569 base pair (bp) mitochondrial genome (Table 1).  This leaves 6316 nucleotides, for which no variants were detected.  There are no significant differences in the base composition of variable and invariant mtDNA sequences (data not shown).  However, there are obvious differences between variable and invariant sequences considering which positions within codons are most often represented.  These data are shown in Table 2 and in Figures 3 and 4. Given that the third base of many codons is permitted to vary, most variation among the protein coding nucleotides represented in the HelixMTDdb occurs in the third position of codons.
+The HelixMTDdb lists variants found at 10,253 nucleotides out of the entire 16,569 base pair (bp) mitochondrial genome (Table 1).  This leaves 6316 nucleotides, for which no variants were detected.  There are no significant differences in the base composition of variable and invariant mtDNA sequences (data not shown).  However, there are obvious differences between variable and invariant sequences considering which positions within codons are most often represented.  These data are shown in Table 2 and in Figure 3. Given that the third base of many codons is permitted to vary, most variation among the protein coding nucleotides represented in the HelixMTDdb occurs in the third position of codons.
 
 ### **Table 1.** Summary of the HelixMTdb
 
@@ -88,38 +88,48 @@ The HelixMTDdb lists variants found at 10,253 nucleotides out of the entire 16,5
 
 | Present in HelixMTdb |      |       |       |        |
 ----------|----------|----------|----------|----------|
-|         |   first  |  second  |   third  | anticodon|
+|         |   **first**  |  **second**  |   **third**  | **anticodon**|
 |**count**|  2689 |  1660  |  5258 |     6    |
 **proportion**|  0.2799 |  0.1728  |  0.5473  |       |
 | | | | | |
 | **Absent from HelixMTdb (invariant)** |      |       |       |        |
-|         |   first  |  second  |   third  | anticodon|
+|         |   **first**  |  **second**  |   **third**  | **anticodon**|
 |**count**|  1650 |  2367  |  67 |     56    |
 **proportion**|  0.4040 |  0.5796  |  0.0164  |       |
 
-### Figure 3
+### Figure 3. Variant and invariant bases affect different codon positions
 
-### Figure 4
+<img src="images/variableINVbyCodon.png" alt="variable bases by codon position" width=1000px>
 
-In contrast to the variants detected among Helix subjects, most invariant nucleotides are found in the first and second positions of codons. The MitoMap alleles of reported pathogenic variants that are also present in the Helix mtDB (Figure 5) are more likely to involve the first and second codon positions, although variants affecting the first codon position outnumber those affecting the second. The excess of bases in the second position of codons among invariant nucleotides suggests that such variants are less compatible with life than those affecting the first position.
+In contrast to the variants detected among Helix subjects, most invariant nucleotides are found in the first and second positions of codons. The MitoMap alleles of reported pathogenic variants that are also present in the Helix mtDB (Figure 4) are more likely to involve the first and second codon positions, although variants affecting the first codon position outnumber those affecting the second. The excess of bases in the second position of codons among invariant nucleotides suggests that such variants are less compatible with life than those affecting the first position.
 
-### Figure 5
+### Figure 4. MitoMap candidate pathogenic alleles predominantly affect first and second codon positions
+
+<img src="images/candHelixByCodon.png" alt="mitomap pathogenic alleles by codon position" width=350px>
 
 Also shown in Table 2 are 56 invariant nucleotides present within the anticodon loops of tRNAs. Given the vital role these nucleotides play in translating the genetic code during protein synthesis, it was no surprise to find that 6 times as many anticodon positions are invariant as those that may vary.  
 
-Due to the evolutionary constraints on expressed sequences, we expected to find more variability in the types of mutations allowed for non-coding sequences than for coding sequences. Insertion-deletion mutations (indels) are particularly harmful to proteins, as they often disrupt the reading frame of all codons downstream of where they occur and are almost always harmful. Among point mutations, transitions involve the substitution of one nucleotide by a chemically similar nucleotide, but transversions involve substitution by a chemically distinct nucleotide. As shown in Figure 6 below, there are very few indels among protein-coding genes, in contrast to non-coding genes. Furthermore, higher proportions of indels and transversions are found among the protein coding variants classified as pathogenic by MitoMap (Figure 7), suggesting such mutations are indeed more harmful.
+Due to the evolutionary constraints on expressed sequences, we expected to find more variability in the types of mutations allowed for non-coding sequences than for coding sequences. Insertion-deletion mutations (indels) are particularly harmful to proteins, as they often disrupt the reading frame of all codons downstream of where they occur and are almost always harmful. Among point mutations, transitions involve the substitution of one nucleotide by a chemically similar nucleotide, but transversions involve substitution by a chemically distinct nucleotide. As shown in Figure 5 below, there are very few indels among protein-coding genes, in contrast to non-coding genes. Furthermore, higher proportions of indels and transversions are found among the protein coding variants classified as pathogenic by MitoMap (Figure 6), suggesting such mutations are indeed more harmful.
 
-### Figure 6
+### Figure 5. Protein coding variants are mostly transitions, indels abound among non-coding sequences
 
-### Figure 7
+<img src="images/proNCbyMutation.png" alt="protein versus non-coding Helix alleles by mutation" width=1000px>
 
-The least certain aspect of the HelixMTtdb is the classification of allele plasmicity.  The plasmicity of variants in the HelixMTtdb was determined by examining the variety of sequence reads obtained from cheek cells present in saliva samples. If invariant sequences were recovered for a given allele, it was classified as homoplasmic.  In contrast, if a mixture of sequences was reliably obtained for an allele from a given sample, it was classified as heteroplasmic.  However, as most mitochondrial diseases affect muscle cells and and the nervous system, the relevance of the Helix plasmicity classifications towards predicting the pathogenicity of variants is unclear, especially since mitochondria are not evenly distributed to all cells during embryonic development. Also, mutations that might be harmful in one cell type may not be harmful in another cell type. Thus, the plasmicity of mutations tolerated in cheek cells may not be relevant to the prediction of mitochondrial disease risk. It would have been ideal to have obtained mtDNA from muscle biopsies, but not very practical for sampling a very large number of individuals, as was done by Helix.  We must work with the data we have and not the data we wish we had. In general, however, the allele frequencies of homoplasmic variants appear to be much higher ( ≥ 2 orders of magnitude) than for heteroplasmic alleles at the same base (Figure 8).
+### Figure 6. Indels are more likely among candidate pathogenic protein coding variants 
 
-### Figure 8
+<img src="images/candProbyMut.png" alt="mitomap protein alleles by mutation" width=350px>
 
-We examined the distributions of variants shared between the Helix mtDB and the MitoMap collection of pathogenic variants by plotting the logarithm of homoplasmic alleles vs. the logarithm of heteroplasmic alleles detected for each variant (Figure 9,pathogenic variants are colored green, heteroplasmic variants left, homoplasmic, right). 
+The least certain aspect of the HelixMTtdb is the classification of allele plasmicity.  The plasmicity of variants in the HelixMTtdb was determined by examining the variety of sequence reads obtained from cheek cells present in saliva samples. If invariant sequences were recovered for a given allele, it was classified as homoplasmic.  In contrast, if a mixture of sequences was reliably obtained for an allele from a given sample, it was classified as heteroplasmic.  However, as most mitochondrial diseases affect muscle cells and and the nervous system, the relevance of the Helix plasmicity classifications towards predicting the pathogenicity of variants is unclear, especially since mitochondria are not evenly distributed to all cells during embryonic development. Also, mutations that might be harmful in one cell type may not be harmful in another cell type. Thus, the plasmicity of mutations tolerated in cheek cells may not be relevant to the prediction of mitochondrial disease risk. It would have been ideal to have obtained mtDNA from muscle biopsies, but not very practical for sampling a very large number of individuals, as was done by Helix.  We must work with the data we have and not the data we wish we had. In general, however, the allele frequencies of homoplasmic variants appear to be much higher ( ≥ 2 orders of magnitude) than for heteroplasmic alleles at the same base (Figure 7).
 
-### Figure 9
+### Figure 7. Homoplasmic variants far outnumber heteroplasmic variants per gene
+
+<img src="images/helixCandHomoHetbyGene.png" alt="protein versus non-coding Helix alleles by mutation" width=1000px>
+
+We examined the distributions of variants shared between the Helix mtDB and the MitoMap collection of pathogenic variants by plotting the logarithm of homoplasmic alleles vs. the logarithm of heteroplasmic alleles detected for each variant (Figure 8, pathogenic variants are colored green, heteroplasmic variants left, homoplasmic, right).
+
+### Figure 8. No linear separation between pathogenic alleles shared between MitoMap and the HelixMTdb and uncharacterized variants
+
+<img src="images/labeledHelixVariants.png">
 
 Differences between allele distributions are greater than they appear, given the logarithmic scales of the plots. It is clear from the point spreads on each plot that alleles affecting the first two codon positions are not as numerous as those affecting the third position.  This mirrors the information in Table 2 and related figures shown above.  More pathogenic variants appear among first and second codon positons and within tRNAs.  Several candidate pathogenic variants are also found among third codon positions and within non-coding sequences.  Given their wider point spread, the frequencies attained by non-coding alleles are obviously greater than those affecting the consequential codon positions 1 and 2, and rRNA and tRNA genes.  The maximum frequencies of pathogenic alleles for a given sequence type appear to be independent of plasmicity.  Most importantly, the figures above show there is no *linear* separation between pathogenic and benign mtDNA variants present within the HelixMTdb.
 
@@ -127,54 +137,106 @@ Differences between allele distributions are greater than they appear, given the
 
 Our exploratory data analysis, in light of what we know about the genetic code and the central dogma of molecular biology, leads us to the following algorithm for deciding whether a particular mitochondrial variant is likely to be deleterious.
 
-### Figure 10. A "human learning" Algorithm for mtDNA variant pathogenicity prediction
+### Figure 9. A "human learning" algorithm for mtDNA variant pathogenicity prediction
 
-<algorithm fig>
+<img src="images/humanAlgorithm.jpg" alt="human learning algorithm" width=400px>
 
-A “human learning” algorithm may not scale easily to very large datasets and may not perform as well as a less biased more quantitative method.  Our entirely qualitative EDA-based algorithm led us to consider a machine learning approach to the prediction of allele pathogenicity beginning with decision trees and random forests, as they are capable of distinguishing non-linearly separable classes.  We also assessed logistic regression and support vector machines with non-linear features for their ability to differentiate our labeled data as pathogenic ‘yes’ vs. pathogenic ‘no.’ Given that we can only be fairly certain about what is pathogenic from the MitoMap data, we began by labeling mutations more numerous than known pathogenic mutations as not pathogenic (still injecting a bit of human judgement into the algorithm).  Eighty-two such mutations were found among Helix variants.  We sampled an equivalent number from the 846 pathogenic alleles annotated by MitoMap to eliminate the issue of class imbalance when training our algorithms. We also considered training a model to distinguish between pathogenic variants and ‘unknown’ variants, making no assumptions about the frequencies of potentially pathogenic alleles. For this approach we also sampled 846 ‘unknown’ variants to form balanced training and testing data sets.  
+This “human learning” algorithm may not scale easily to very large datasets and may not perform as well as a less biased more quantitative method.  Our entirely qualitative EDA-based algorithm led us to consider a machine learning approach to the prediction of allele pathogenicity beginning with decision trees and random forests, as they are capable of distinguishing non-linearly separable classes.  We also assessed logistic regression and support vector machines with non-linear features for their ability to differentiate our labeled data as pathogenic ‘yes’ vs. pathogenic ‘no.’ Given that we can only be fairly certain about what is pathogenic from the MitoMap data, we began by labeling mutations more numerous than known pathogenic mutations as not pathogenic (still injecting a bit of human judgement into the algorithm).  Eighty-two such mutations were found among Helix variants.  We sampled an equivalent number from the 846 pathogenic alleles annotated by MitoMap to eliminate the issue of class imbalance when training our algorithms. We also considered training a model to distinguish between pathogenic variants and ‘unknown’ variants, making no assumptions about the frequencies of potentially pathogenic alleles. For this approach we also sampled 846 ‘unknown’ variants to form balanced training and testing data sets.  
 
-A decision tree constrained by the requirement of a minimum of 5 samples per leaf to control overfitting yielded a test error of 0.82.  This tree, shown in Figure 11, does probably overfit the data, despite our added constraint.
+A decision tree constrained by the requirement of a minimum of 5 samples per leaf to control overfitting yielded a test error of 0.82.  This tree, shown in Figure 10, does probably overfit the data, despite our added constraint.
 
-### Figure 11. Decision Tree
+### Figure 10. Initial decision tree
 
+<img src="images/full_balanced_tree.png" alt="decision tree">
 
-We sampled an equal number of pathogenic variants to match the 82 non-pathogenic variants and regenerated training and test data sets over 1000 iterations and achieved an average test accuracy of 90% with a standard deviation of 0.06 with a decision tree limited to a minimum of 5 samples per leaf.  We then employed cost-complexity pruning using a cost-complexity parameter of 0.03, rather than limiting the minimum number of samples per leaf and achieved a test accuracy of 0.9 with a single tree.  This pruned tree is shown in Figure 12.
+| | "annotation" |         |   "mutation"  |
+---------|------------|----------|-----------|
+|**1**| codon position 1 | **1** |indel   |
+**2**| codon position 2 | **2** | transition |
+**3**| codon position 3 | **3** | transversion |
+**4**| anticodon loop |  |  |
+**5**| non-coding | | |
+**6**| replication origin | | |
+**7**| rRNA | | |
+**8**| tRNA | | |
 
-### Figure 12. Pruned Tree
+We sampled an equal number of pathogenic variants to match the 82 non-pathogenic variants and regenerated training and test data sets over 1000 iterations and achieved an average test accuracy of 90% with a standard deviation of 0.06 with a decision tree limited to a minimum of 5 samples per leaf.  We then employed cost-complexity pruning using a cost-complexity parameter of 0.03, rather than limiting the minimum number of samples per leaf and achieved a test accuracy of 0.9 with a single tree.  This pruned tree is shown in Figure 11.
 
+### Figure 11. Pruned decision tree
 
-### Key
+<img src="images/pruned_balanced_tree.png" alt="decision tree">
+
+| | "annotation" |         |   "mutation"  |
+---------|------------|----------|-----------|
+|**1**| codon position 1 | **1** |indel   |
+**2**| codon position 2 | **2** | transition |
+**3**| codon position 3 | **3** | transversion |
+**4**| anticodon loop |  |  |
+**5**| non-coding | | |
+**6**| replication origin | | |
+**7**| rRNA | | |
+**8**| tRNA | | |
 
 The decision tree appears to first differentiate high frequency vs. lower frequency heteroplasmic alleles.  Then it considers whether the mutation is an indel (mutation < 1.5) or whether the first and second codon positions are affected (annotation < 2.5).  If a mutation is an indel is it classified as pathogenic if it has fewer than 88.5 homoplasmic instances.  If a mutation is not an indel, then it is classified as pathogenic if it has fewer than 2862 homoplasmic instances.  Mutations that affect the first or second codon positions are labeled as pathogenic, unless they exist with more than 21,353 homoplasmic instances. In general, the more times a variant was detected among individuals, the less likely it was labeled as pathogenic.  
 
 We then tested logistic regression, an SVM with the default radial basis kernel, and a random forest, each over 100 iterations of train/test set splits, model training, and testing to see if a more accurate classifier could be found.  We kept the ccp-α parameter equal to 0.03 for the random forest. The SVM did poorly, with a test accuracy of only 56%, probably due to the absence of a linear decision boundary between classes.  Logistic regression was notably better, with a test accuracy of 75%, but not nearly as well as the random forest, with its test accuracy to 93%, even with regularization.  This classifier had a precision of 0.83 and a recall of 0.86, indicating similar abilities to distinguish true positives and true negatives.  Models are summarized in Table 3.
 
 ### Table 3. Informed (biased) classifier accuracies
-
+|  Classifier | Mean Accuracy | Standard Deviation |
+|-------------|---------------|--------------------|
+|Logistic regression| 0.75 | 0.07 |
+| SVM | 0.56 | 0.06 |
+| Random forest | 0.93 | 0.05 |
 
 We used this random forest derived from the assumption that higher allele frequencies implied that variants were not pathogenic to predict the pathogenicity of all unclassified bases in the Helix mtDB.  It predicted a total of 1670 pathogenic variants and 11029 non-pathogenic variants.  EDA on these predictions is discussed below.
 
-As mentioned above, we also developed classifiers without making any assumptions as to the likelihood that a more frequent variant may not be pathogenic and instead trained models to distinguish between pathogenic ‘yes’ and pathogenic ‘unknown’ classes.  Given that we were not limited by the number of variants that we classified as not-pathogenic, but were instead only limited by the number of known pathogenic variants, which totaled 846, we sampled 846 bases from the unknown bases to form balanced training and testing data sets.  A decision tree limited to a minimum of 20 samples per leaf gave a test accuracy of 0.71 when distinguishing pathogenic from unknown variants. Cost-complexity pruning with an alpha parameter of 0.003 reduced the tree’s complexity considerably (Figure 13), while still permitting a test accuracy of 0.69.  It is interesting to note that the accuracy of the tree that was uninformed by the assumption that the frequencies of pathogenic alleles would likely be lower than those of known pathogenic variants is roughly 20% lower than that trained with the benefit of human intuition. 
+As mentioned above, we also developed classifiers without making any assumptions as to the likelihood that a more frequent variant may not be pathogenic and instead trained models to distinguish between pathogenic ‘yes’ and pathogenic ‘unknown’ classes.  Given that we were not limited by the number of variants that we classified as not-pathogenic, but were instead only limited by the number of known pathogenic variants, which totaled 846, we sampled 846 bases from the unknown bases to form balanced training and testing data sets.  A decision tree limited to a minimum of 20 samples per leaf gave a test accuracy of 0.71 when distinguishing pathogenic from unknown variants. Cost-complexity pruning with an alpha parameter of 0.003 reduced the tree’s complexity considerably (Figure 12), while still permitting a test accuracy of 0.69.  It is interesting to note that the accuracy of the tree that was uninformed by the assumption that the frequencies of pathogenic alleles would likely be lower than those of known pathogenic variants is roughly 20% lower than that trained with the benefit of human intuition. 
 
-### Figure 13. Decision Tree for 'Unknown' Classes with Regularization
+### Figure 12. Decision tree for 'unknown' classes with regularization
 
+<img src="images/pruned_split_tree.png" alt="pruned unbiased tree">
 
+| | "annotation" |         |   "mutation"  |
+---------|------------|----------|-----------|
+|**1**| codon position 1 | **1** |indel   |
+**2**| codon position 2 | **2** | transition |
+**3**| codon position 3 | **3** | transversion |
+**4**| anticodon loop |  |  |
+**5**| non-coding | | |
+**6**| replication origin | | |
+**7**| rRNA | | |
+**8**| tRNA | | |
 
-Feeling that we could obtain a more accurate classifier, we trained logistic regression, SVM, and random forest classifiers as described above over 100 iterations of train/test splits with different random samples of 846 unknown variants.  As before, the random forest yielded the highest test accuracy, 75%, which was about as good as the logistic regression classifier based on our partial manual classification of non-pathogenic bases. The precision of this random forest was 0.67 and its recall was 0.70, indicating that this classifier makes errant false positive and false negative predictions roughly with equal probability. These models are summarized in Table 4. 
+Feeling that we could obtain a more accurate classifier, we trained logistic regression, SVM, and random forest classifiers as described above over 100 iterations of train/test splits with different random samples of 846 unknown variants.  As before, the random forest yielded the highest test accuracy, 75%, which was about as good as the logistic regression classifier based on our partial manual classification of non-pathogenic bases. The precision of this random forest was 0.67 and its recall was 0.70, indicating that this classifier makes errant false positive and false negative predictions roughly with equal probability. These models are summarized in Table 4.
 
 ### Table 4. Summary of unbiased classifier accuracies
+|  Classifier | Mean Accuracy | Standard Deviation |
+|-------------|---------------|--------------------|
+|Logistic regression| 0.61 | 0.02 |
+| SVM | 0.54 | 0.03 |
+| Random forest | 0.75 | 0.02 |
 
 A closer look at the confusion matrix resulting from an SVM with the default RBF kernel reveled that the SVM was basically calling everything pathogenic, as its precision was only 0.56 but its recall was 1, due to an absence of false negatives.  Changing to a polynomial kernel made absolutely no difference to the performance of this classifier, and changing to a sigmoid kernel also showed no practical improvement.
 
-Given the fairly good test accuracy (93%), of our first random forest classifier we performed EDA on its predictions to see if the variants it called as pathogenic ‘yes’ were similar to the known MitoMap variants observed in patients suspected of having a mitochondrial disorder.  A two-dimensional plot of the logarithm of the number of homoplasmic variants vs. the logarithm of the count of heteroplasmic variants labeled with the predictions of this classifier is shown in Figure 14.  A total of 2163 variants of unknown pathogenicity are predicted as pathogenic and 10536 are labeled as benign. It is clear from the plot that the most frequently occurring variants are labeled as non-pathogenic, which we expected given that model is biased against the possibility that the most frequent variants are pathogenic.  
+Given the fairly good test accuracy (93%), of our first random forest classifier we performed EDA on its predictions to see if the variants it called as pathogenic ‘yes’ were similar to the known MitoMap variants observed in patients suspected of having a mitochondrial disorder.  A two-dimensional plot of the logarithm of the number of homoplasmic variants vs. the logarithm of the count of heteroplasmic variants labeled with the predictions of this classifier is shown in Figure 13.  A total of 2163 variants of unknown pathogenicity are predicted as pathogenic and 10536 are labeled as benign. It is clear from the plot that the most frequently occurring variants are labeled as non-pathogenic, which we expected given that model is biased against the possibility that the most frequent variants are pathogenic.  
 
-### Figure 14. Random forest prediction of pathogenic variants
+### Figure 13. Random forest predicted labels (pathogenic yes/no) of 'unknown' variants
 
-A plot of the number of predicted pathogenic variants by codon position (Figure 15) provides little insight as to whether the random forest’s predictions are accurate.  In fact, there is nothing distinguishing the variants predicted to be pathogenic from the average variant in the HelixMTdb (compare Figure 15 and Figure 3).  Most of the variation among the alleles predicted to be pathogenic is still in the third codon position, in contrast to the preponderance of variants at the first and second codon positions of the MitoMap pathogenic alleles. Thus, the model does not appear to be considering codon position when distinguishing a putative pathogenic variant from a benign variant.  It appears that allele frequency is the primary feature being differentiated. Very few mutations within non-coding sequences are present in both the HelixMTdb and the MitoMap collection of reported pathogenic variants (Figure 16, left).
+<img src="images/logPredPlot.png" alt="random forest predictions" width=400px>
 
-### Figure 16.
+A plot of the number of predicted pathogenic variants by codon position (Figure 14) provides little insight as to whether the random forest’s predictions are accurate.  In fact, there is nothing distinguishing the variants predicted to be pathogenic from the average variant in the HelixMTdb (compare Figure 14 and Figure 3, left).  Most of the variation among the alleles predicted to be pathogenic is still in the third codon position, in contrast to the preponderance of variants at the first and second codon positions of the MitoMap pathogenic alleles. Thus, the model does not appear to be considering codon position when distinguishing a putative pathogenic variant from a benign variant.  
 
-Three homoplasmic mutations (and zero heteroplasmic) affecting the replication origin of the mitochondrial genome are present in the HelixMTdb.  Given the expected role of this region in the maintenance of mtDNA, it would not be surprising to learn that they are in fact deleterious variants that decrease the copy number of mtDNA within cells.  These are the only instances in the HelixMTdb where the annotation of the affected base is “replication origin.”  The random forest is predicting that these variants are pathogenic, likely solely on the basis of their rarity (Figure 16, right). Additionally, we suspect that the allele within the non-coding sequence MT-NC5 was classified as pathogenic based on its being an indel, even though most of the variation within MT-NC5 and other non-coding sequences consists of indels (Figure 6, right). Among protein coding sequences, indels are enriched specifically among pathogenic variants (Figure 7).
+### Figure 14. A random forest fails to distinguish between codon positions for pathogenic variants
+
+<img src="images/predPathbyCodon.png" alt="random forest predictions by codon position" width=350px>
+
+It appears that allele frequency is the primary feature being differentiated. Very few mutations within non-coding sequences are present in both the HelixMTdb and the MitoMap collection of reported pathogenic variants (Figure 15, left).
+
+### Figure 15. Allele frequencies drive decisions made by the random forest classifier
+
+<img src="images/candPredNCbyMut.png" alt="mitomap versus predicted non-coding pathogenic variants" width=1000px>
+
+Three homoplasmic (and zero heteroplasmic) mutations affecting the replication origin of the mitochondrial genome are present in the HelixMTdb.  Given the expected role of this region in the maintenance of mtDNA, it is certainly possible that they are deleterious variants that decrease the copy number of mtDNA within cells, although such variants do not appear to be present in the MitoMap collection.  These are the only instances in the HelixMTdb where the annotation of the affected base is “replication origin.”  The random forest predicts that these variants are pathogenic, likely solely on the basis of their rarity (Figure 15, right). Additionally, we suspect that the allele within the non-coding sequence MT-NC5 was classified as pathogenic based on its being an indel, even though most of the variation within MT-NC5 and other non-coding sequences consists of indels (Figure 5, right). Among protein coding sequences, indels are enriched specifically among pathogenic variants (Figure 6).
 
 ## Discussion
 
