@@ -76,15 +76,14 @@ The HelixMTDdb lists variants found at 10,253 nucleotides out of the entire 16,5
 
 |        |            |
 ---------|------------|
- **total length of human mtDNA** | 16,569 |
- **bases present in the HelixMTdb** | 10,253*  |
- **total invariant bases** | 6316 | 
- **total coding bases** | 9607˚ (93.7% of variant bases) |
+ **total length of human mtDNA** | 16,569
+ **bases present in the HelixMTdb** | 10,253*  
+ **total invariant bases** | 6316
+ **total coding bases** | 9607˚ (93.7% of variant bases)
  **total non-coding bases** | 646
- **total number of non-coding alleles** | 1,427,782 (28.3% of all alleles) |
-| *multiple alleles exist for several bases | | | |
-| ˚Due to the presence of overlapping reading frames, this number is not exact but is based on the total bases annotated as “coding”| | | |
-
+ **total number of non-coding alleles** | 1,427,782 (28.3% of all alleles)
+| *multiple alleles exist for several bases | | |
+| ˚Due to the presence of overlapping reading frames, this number is not exact but is based on the total bases annotated as “coding”| | |
 
 ### **Table 2.** Distribution of codon positions
 
