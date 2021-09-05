@@ -28,8 +28,7 @@ The incidence of mitochondrial disorders (Figure 2) is roughly 1 in 5000 and at 
 
 We have examined the Helix mitochondrial DNA database (HelixMTdb) and known pathogenic mtDNA mutations curated by the MitoMap consortium to develop a predictive model of the pathogenicity of mtDNA mutations. Given the estimate of 1:200 for the frequency of carriers, we would expected to find approximately 1000 individuals harboring genuine pathogenic mutations among those that contributed to the HelixMTdb dataset.
 
-The genetic code consists of the mapping of nucleotide triplets called codons encoded by the nuclear genome to particular amino acids in proteins.  
-Nuclear DNA is transcribed to messenger RNA, which serves as the template for protein synthesis. The nucleotide code is translated into the amino acid sequences of proteins by transfer RNAs (tRNAs) with the assistance of ribosomal RNA (rRNA) within the ribosome. Mitochondria utilize a variant genetic code (shown below) to express their genes as proteins.  
+The genetic code consists of the mapping of nucleotide triplets called codons encoded by the nuclear genome to particular amino acids in proteins.  Nuclear DNA is transcribed to messenger RNA, which serves as the template for protein synthesis. The nucleotide code is translated into the amino acid sequences of proteins by transfer RNAs (tRNAs) with the assistance of ribosomal RNA (rRNA) within the ribosome. Mitochondria utilize a variant genetic code (shown below) to express their genes as proteins.  
 
 ### The human mitochondrial genetic code
 
@@ -120,7 +119,7 @@ Due to the evolutionary constraints on expressed sequences, we expected to find 
 
 <img src="images/candProByMut.png" alt="mitomap protein alleles by mutation" width=350px>
 
-The least certain aspect of the HelixMTtdb is the classification of allele plasmicity.  The plasmicity of variants in the HelixMTtdb was determined by examining the variety of sequence reads obtained from cheek cells present in saliva samples. If invariant sequences were recovered for a given allele, it was classified as homoplasmic.  In contrast, if a mixture of sequences was reliably obtained for an allele from a given sample, it was classified as heteroplasmic.  However, as most mitochondrial diseases affect muscle cells and and the nervous system, the relevance of the Helix plasmicity classifications towards predicting the pathogenicity of variants is unclear, especially since mitochondria are not evenly distributed to all cells during embryonic development. Also, mutations that might be harmful in one cell type may not be harmful in another cell type. Thus, the plasmicity of mutations tolerated in cheek cells may not be relevant to the prediction of mitochondrial disease risk. It would have been ideal to have obtained mtDNA from muscle biopsies, but not very practical for sampling a very large number of individuals, as was done by Helix.  We must work with the data we have and not the data we wish we had. In general, however, the allele frequencies of homoplasmic variants appear to be much higher ( ≥ 2 orders of magnitude) than for heteroplasmic alleles at the same base (Figure 7).
+The least certain aspect of the HelixMTtdb is the classification of allele plasmicity.  The plasmicity of variants in the HelixMTtdb was determined by examining the variety of sequence reads obtained from cheek cells present in saliva samples. If invariant sequences were recovered for a given allele, it was classified as homoplasmic.  In contrast, if a mixture of sequences was reliably obtained for an allele from a given sample, it was classified as heteroplasmic.  However, as most mitochondrial diseases affect muscle cells and and the nervous system, the relevance of the Helix plasmicity classifications towards predicting the pathogenicity of variants is unclear, especially since mitochondria are not evenly distributed to all cells during embryonic development. Also, mutations that might be harmful in one cell type may not be harmful in another cell type. Thus, the plasmicity of mutations tolerated in cheek cells may not be relevant to the prediction of mitochondrial disease risk. It would have been ideal to have obtained mtDNA from muscle biopsies, but not very practical for sampling a very large number of individuals, as was done by Helix.  We must work with the data we have and not the data we wish we had. In general, the allele frequencies of homoplasmic variants appear to be much higher ( ≥ 2 orders of magnitude) than for heteroplasmic alleles at the same base (Figure 7).
 
 ### Figure 7. Homoplasmic variants far outnumber heteroplasmic variants per gene
 
@@ -183,11 +182,11 @@ The decision tree appears to first differentiate high frequency vs. lower freque
 We then tested logistic regression, an SVM with the default radial basis kernel, and a random forest, each over 100 iterations of train/test set splits, model training, and testing to see if a more accurate classifier could be found.  We kept the ccp-α parameter equal to 0.03 for the random forest. The SVM did poorly, with a test accuracy of only 56%, probably due to the absence of a linear decision boundary between classes.  Logistic regression was notably better, with a test accuracy of 75%, but not nearly as well as the random forest, with its test accuracy to 93%, even with regularization.  This classifier had a precision of 0.83 and a recall of 0.86, indicating similar abilities to distinguish true positives and true negatives.  Models are summarized in Table 3.
 
 ### Table 3. Informed (biased) classifier accuracies
-|  Classifier | Mean Accuracy | Standard Deviation |
+   Classifier | Mean Accuracy | Standard Deviation |
 |-------------|---------------|--------------------|
-|Logistic regression| 0.75 | 0.07 |
-| SVM | 0.56 | 0.06 |
-| Random forest | 0.93 | 0.05 |
+Logistic regression| 0.75 | 0.07 |
+SVM | 0.56 | 0.06 |
+Random forest | 0.93 | 0.05 |
 
 We used this random forest derived from the assumption that higher allele frequencies implied that variants were not pathogenic to predict the pathogenicity of all unclassified bases in the Helix mtDB.  It predicted a total of 1670 pathogenic variants and 11029 non-pathogenic variants.  EDA on these predictions is discussed below.
 
@@ -212,11 +211,11 @@ Feeling that we could obtain a more accurate classifier, we trained logistic reg
 
 ### Table 4. Summary of unbiased classifier accuracies
 
-|  Classifier | Mean Accuracy | Standard Deviation |
-|-------------|---------------|--------------------|
-|Logistic regression| 0.61 | 0.02 |
-| SVM | 0.54 | 0.03 |
-| Random forest | 0.75 | 0.02 |
+ Classifier | Mean Accuracy | Standard Deviation |
+|-------------|---------------|------------------|
+Logistic regression| 0.61 | 0.02 |
+SVM | 0.54 | 0.03 |
+Random forest | 0.75 | 0.02 |
 
 A closer look at the confusion matrix resulting from an SVM with the default RBF kernel reveled that the SVM was basically calling everything pathogenic, as its precision was only 0.56 but its recall was 1, due to an absence of false negatives.  Changing to a polynomial kernel made absolutely no difference to the performance of this classifier, and changing to a sigmoid kernel also showed no practical improvement.
 
