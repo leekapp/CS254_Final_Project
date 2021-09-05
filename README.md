@@ -211,6 +211,7 @@ As mentioned above, we also developed classifiers without making any assumptions
 Feeling that we could obtain a more accurate classifier, we trained logistic regression, SVM, and random forest classifiers as described above over 100 iterations of train/test splits with different random samples of 846 unknown variants.  As before, the random forest yielded the highest test accuracy, 75%, which was about as good as the logistic regression classifier based on our partial manual classification of non-pathogenic bases. The precision of this random forest was 0.67 and its recall was 0.70, indicating that this classifier makes errant false positive and false negative predictions roughly with equal probability. These models are summarized in Table 4.
 
 ### Table 4. Summary of unbiased classifier accuracies
+
 |  Classifier | Mean Accuracy | Standard Deviation |
 |-------------|---------------|--------------------|
 |Logistic regression| 0.61 | 0.02 |
